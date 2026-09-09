@@ -7,7 +7,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
 <style>
-  /* Neurobox tokens (confirmed 2026-09-08). Fluid layout: no stage scaling, so browser zoom works (WCAG 1.4.4). */
+  /* Neurobox tokens (confirmed 2026-09-08). Fluid layout: no stage scaling, so browser zoom works (WCAG 1.4.4).
+     360Learning renders an embedded document in a 16:9 box the width of the content column (about 630×354 on a
+     13-inch MacBook with the comments panel open) and ignores the iframe's height. Every screen is built to fit
+     that box at 100% zoom from 600px wide: type eases with the frame width (never below 15px), two columns wherever
+     the width allows, a compact mode under 440px tall. At 200% zoom the frame scrolls, which is correct. */
   :root {
     --primary: #5D36FF; --primary-dark: #4B31E0;
     --secondary: #E3DDF9; --accent: #C875B8;
@@ -18,79 +22,94 @@
     --error: #B8332A;   --error-bg: #FDECEA;
     --font: 'Roboto', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
     --r: 16px; --r-sm: 10px;
+    --fs-body: clamp(0.9375rem, 0.72rem + 0.6vw, 1.0625rem);
+    --fs-small: clamp(0.9375rem, 0.8rem + 0.4vw, 1rem);
+    --fs-h1: clamp(1.1875rem, 0.75rem + 1.45vw, 1.625rem);
+    --fs-h2: clamp(1.0625rem, 0.7rem + 1.2vw, 1.375rem);
+    --gap: clamp(0.375rem, 0.15rem + 0.6vw, 0.75rem);
+    --lh: 1.55;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { font-size: 100%; }
-  /* Seamless in the 360Learning frame: white ground, no card border, no outer gutter. */
   body { min-height: 100vh; font-family: var(--font); background: var(--surface); color: var(--ink); -webkit-font-smoothing: antialiased; line-height: 1.5; }
-  #app { max-width: 960px; margin: 0 auto; padding: 0 0 0.5rem; min-height: 100vh; display: flex; flex-direction: column; }
+  #app { max-width: 960px; margin: 0 auto; padding: 0 0 0.375rem; min-height: 100vh; display: flex; flex-direction: column; }
   .screen { display: none; }
   .screen.active { display: flex; flex-direction: column; flex: 1; animation: fadeIn .3s ease forwards; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) { .screen.active { animation: none; } .btn { transition: none; } }
 
-  .card { background: var(--surface); padding: 0.25rem 0 0.5rem; flex: 1; display: flex; flex-direction: column; }
-  .eyebrow { font-size: 0.9375rem; font-weight: 700; color: var(--primary); margin-bottom: 0.5rem; }
-  h1 { font-size: 1.625rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.625rem; max-width: 36ch; }
-  h2 { font-size: 1.375rem; font-weight: 700; line-height: 1.3; margin-bottom: 0.5rem; max-width: 44ch; }
-  h2.wide { max-width: 56ch; }
+  .card { background: var(--surface); padding: 0.125rem 0 0.25rem; flex: 1; display: flex; flex-direction: column; }
+  .eyebrow { font-size: 0.9375rem; font-weight: 700; color: var(--primary); margin-bottom: var(--gap); }
+  h1 { font-size: var(--fs-h1); font-weight: 700; line-height: 1.25; margin-bottom: var(--gap); max-width: 36ch; }
+  h2 { font-size: var(--fs-h2); font-weight: 700; line-height: 1.3; margin-bottom: var(--gap); max-width: 44ch; }
+  h2.wide { max-width: 60ch; }
   h1:focus, h2:focus, .question:focus { outline: none; }
-  p { font-size: 1.0625rem; line-height: 1.6; color: var(--ink-soft); max-width: 62ch; }
-  .mt-1 { margin-top: 0.5rem; } .mt-2 { margin-top: 1rem; } .grow { flex: 1; }
+  p { font-size: var(--fs-body); line-height: var(--lh); color: var(--ink-soft); max-width: 62ch; }
+  .mt-1 { margin-top: var(--gap); } .mt-2 { margin-top: calc(var(--gap) * 1.5); } .grow { flex: 1; }
   strong { font-weight: 700; color: var(--ink); }
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .split { display: grid; grid-template-columns: 1.1fr 1fr; gap: 0.5rem 1.5rem; align-items: start; }
+  @media (max-width: 599px) { .split { grid-template-columns: 1fr; } }
 
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; font-family: inherit; font-size: 1rem; font-weight: 500; border: none; border-radius: var(--r-sm); cursor: pointer; padding: 0.75rem 1.25rem; min-height: 2.875rem; transition: background .15s; line-height: 1.4; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; font-family: inherit; font-size: 1rem; font-weight: 500; border: none; border-radius: var(--r-sm); cursor: pointer; padding: 0.625rem 1.125rem; min-height: 2.75rem; transition: background .15s; line-height: 1.4; }
   .btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
-  .btn-primary { background: var(--primary); color: #fff; align-self: flex-start; margin-top: 0.875rem; }
+  .btn-primary { background: var(--primary); color: #fff; align-self: flex-start; margin-top: var(--gap); }
   .btn-primary:hover { background: var(--primary-dark); }
-  .choices { display: grid; grid-template-columns: 1fr; gap: 0.5rem; margin-top: 0.75rem; }
-  .btn-choice { background: var(--surface-alt); color: var(--ink); text-align: left; justify-content: flex-start; padding: 0.625rem 0.875rem; border: 1px solid var(--primary); font-size: 1rem; }
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap) 0.75rem; margin-top: var(--gap); }
+  @media (max-width: 599px) { .choices { grid-template-columns: 1fr; } }
+  .btn-choice { background: var(--surface-alt); color: var(--ink); text-align: left; justify-content: flex-start; align-items: flex-start; padding: 0.5rem 0.75rem; border: 1px solid var(--primary); font-size: var(--fs-body); line-height: 1.4; }
   .btn-choice:hover { background: #fff; box-shadow: inset 0 0 0 1px var(--primary); }
-  .btn-choice small { display: inline; font-size: 0.9375rem; color: var(--ink-muted); font-weight: 400; line-height: 1.5; }
-  .btn-choice small::before { content: " · "; }
-  .btn-choice .k { display: inline-block; min-width: 1.75rem; height: 1.75rem; border-radius: 6px; background: var(--secondary); color: var(--primary-dark); font-weight: 700; font-size: 0.9375rem; text-align: center; line-height: 1.75rem; margin-right: 0.75rem; flex-shrink: 0; }
+  .btn-choice small { display: block; font-size: var(--fs-small); color: var(--ink-muted); font-weight: 400; margin-top: 0.125rem; line-height: 1.4; }
+  .btn-choice .k { display: inline-block; min-width: 1.75rem; height: 1.75rem; border-radius: 6px; background: var(--secondary); color: var(--primary-dark); font-weight: 700; font-size: 0.9375rem; text-align: center; line-height: 1.75rem; margin-right: 0.625rem; flex-shrink: 0; }
 
-  .pressure { display: flex; align-items: center; gap: 0.5rem; background: var(--warning-bg); color: var(--warning); border-radius: 8px; padding: 0.5rem 0.75rem; font-size: 0.9375rem; font-weight: 500; margin-bottom: 0.625rem; }
+  .pressure { display: flex; align-items: center; gap: 0.5rem; background: var(--warning-bg); color: var(--warning); border-radius: 8px; padding: 0.375rem 0.75rem; font-size: 0.9375rem; font-weight: 500; margin-bottom: var(--gap); }
   .pressure .keys { margin-left: auto; font-weight: 400; }
-  .tag { display: inline-block; font-size: 0.9375rem; font-weight: 700; padding: 0.25rem 0.625rem; border-radius: 6px; margin-bottom: 0.5rem; }
+  .tag { display: inline-block; font-size: 0.9375rem; font-weight: 700; padding: 0.2rem 0.625rem; border-radius: 6px; margin-bottom: var(--gap); }
   .tag-red { background: var(--error-bg); color: var(--error); } .tag-amber { background: var(--warning-bg); color: var(--warning); } .tag-green { background: var(--success-bg); color: var(--success); }
 
-  .status { display: flex; gap: 0.625rem; margin-top: 0.875rem; flex-wrap: wrap; }
-  .chip { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--surface-alt); border: 1px solid var(--line); border-radius: 999px; padding: 0.5rem 0.875rem; font-size: 0.9375rem; font-weight: 500; color: var(--ink); }
+  .status { display: flex; gap: 0.5rem; margin-top: var(--gap); flex-wrap: wrap; }
+  .chip { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--surface-alt); border: 1px solid var(--line); border-radius: 999px; padding: 0.375rem 0.75rem; font-size: 0.9375rem; font-weight: 500; color: var(--ink); }
   .chip .ok { width: 10px; height: 10px; border-radius: 50%; background: var(--success); } .chip .no { width: 10px; height: 10px; border-radius: 50%; background: var(--error); }
 
-  .memory { display: grid; grid-template-columns: 1.15fr .85fr; gap: 1rem; margin-top: 0.5rem; }
-  @media (max-width: 520px) { .memory { grid-template-columns: 1fr; } }
-  .quote { background: var(--surface-alt); border-left: 4px solid var(--primary); border-radius: 0 12px 12px 0; padding: 0.875rem 1rem; font-size: 1.0625rem; line-height: 1.55; color: var(--ink); }
-  .quote .who { font-size: 0.9375rem; color: var(--ink-muted); margin-top: 0.5rem; font-weight: 500; }
-  .scene { background: var(--surface-grey); border-radius: 12px; padding: 0.875rem 1rem; font-size: 0.9375rem; line-height: 1.6; color: var(--ink-soft); }
-  .scene b { display: block; color: var(--ink); font-size: 0.9375rem; margin-bottom: 0.375rem; }
-  .scene ul { padding-left: 1rem; } .scene li { margin-bottom: 0.25rem; }
+  .memory { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: var(--gap); align-items: start; }
+  @media (max-width: 519px) { .memory { grid-template-columns: 1fr; } }
+  .quote { background: var(--surface-alt); border-left: 4px solid var(--primary); border-radius: 0 12px 12px 0; padding: 0.625rem 0.875rem; font-size: var(--fs-body); line-height: var(--lh); color: var(--ink); }
+  .quote .who { font-size: var(--fs-small); color: var(--ink-muted); margin-top: 0.375rem; font-weight: 500; }
+  .scene { background: var(--surface-grey); border-radius: 12px; padding: 0.625rem 0.875rem; font-size: var(--fs-small); line-height: var(--lh); color: var(--ink-soft); }
+  .scene b { display: block; color: var(--ink); font-size: var(--fs-small); margin-bottom: 0.25rem; }
+  .scene ul { padding-left: 1rem; } .scene li { margin-bottom: 0.125rem; }
 
-  .timeline { margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1.25rem; }
-  .timeline > div { border-left: 2px solid var(--secondary); padding-left: 0.875rem; }
-  @media (max-width: 560px) { .timeline { grid-template-columns: 1fr; } }
-  .timeline-time { font-size: 0.9375rem; font-weight: 700; color: var(--primary-dark); }
-  .timeline-desc { font-size: 0.9375rem; line-height: 1.5; color: var(--ink-soft); max-width: 62ch; }
-  .strip { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; align-items: baseline; background: var(--surface-alt); border-radius: 12px; padding: 0.5rem 0.875rem; margin-top: 0.75rem; }
-  .stat { display: inline-flex; align-items: baseline; gap: 0.5rem; }
-  .stat-number { font-size: 1.25rem; font-weight: 700; color: var(--primary); flex-shrink: 0; }
-  .stat-label { font-size: 0.9375rem; line-height: 1.5; color: var(--ink-soft); }
-  .src { font-size: 0.9375rem; color: var(--ink-muted); margin-top: 0.625rem; }
-  .question { font-size: 1.5rem; font-weight: 700; line-height: 1.35; margin: 0.375rem 0 1rem; max-width: 40ch; }
-  .yn { display: flex; gap: 0.625rem; flex-wrap: wrap; }
+  .timeline { margin-top: var(--gap); display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap) 1.25rem; align-items: start; }
+  .timeline .col { display: grid; gap: var(--gap); }
+  .timeline .col > div { border-left: 2px solid var(--secondary); padding-left: 0.75rem; }
+  @media (max-width: 559px) { .timeline { grid-template-columns: 1fr; } }
+  .timeline-time { font-size: var(--fs-small); font-weight: 700; color: var(--primary-dark); }
+  .timeline-desc { font-size: var(--fs-small); line-height: 1.4; color: var(--ink-soft); max-width: 62ch; }
+  .question { font-size: var(--fs-h2); font-weight: 700; line-height: 1.35; margin: 0.25rem 0 var(--gap); max-width: 40ch; }
+  .yn { display: flex; gap: 0.5rem; flex-wrap: wrap; }
   .btn-yn { background: var(--surface-alt); color: var(--ink); border: 1px solid var(--primary); }
   .btn-yn:hover { background: #fff; }
   .hidden { display: none !important; }
-  .list { margin-top: 0.5rem; display: grid; gap: 0.25rem; padding-left: 1.25rem; font-size: 1rem; line-height: 1.5; color: var(--ink-soft); max-width: 62ch; }
+  .list { margin-top: var(--gap); display: grid; gap: 0.2rem; padding-left: 1.25rem; font-size: var(--fs-small); line-height: 1.45; color: var(--ink-soft); max-width: 62ch; }
 
-  .foot { display: flex; align-items: center; justify-content: space-between; padding-top: 0.5rem; gap: 1rem; }
+  .foot { display: flex; align-items: center; justify-content: space-between; padding-top: 0.375rem; gap: 1rem; }
   .dots { display: flex; gap: 6px; align-items: center; }
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--secondary); }
   .dot.active { background: var(--primary); width: 22px; border-radius: 4px; }
-  .step { font-size: 0.9375rem; color: var(--ink-muted); }
+  .step { font-size: 0.875rem; color: var(--ink-muted); }
   .brand { width: 84px; height: 16px; }
+
+  /* Compact mode: a 16:9 frame under 440px tall (a column narrower than about 780px). */
+  @media (max-height: 440px) {
+    :root { --lh: 1.45; }
+    .foot .brand, .foot .dots { display: none; }
+    .foot { justify-content: flex-end; padding-top: 0.25rem; }
+    .btn { min-height: 2.5rem; padding: 0.5rem 1rem; }
+    .btn-choice { padding: 0.375rem 0.625rem; }
+    .scene li { margin-bottom: 0; }
+  }
+  /* Under 360px tall (a column under about 640px) the option sub-labels go; the consequence screens carry the meaning. */
+  @media (max-height: 360px) { .btn-choice small { display: none; } }
 </style>
 </head>
 <body>
@@ -117,7 +136,7 @@
           <div class="quote">“Sam, can you do the risk section for Tuesday? Usual format, keep it tight.”<div class="who">You, on the way past Sam’s desk, on the way to a call.</div></div>
           <p class="mt-2">Sam nodded. You kept walking. Nothing was written down.</p>
         </div>
-        <div class="scene"><b>In the room at the time</b><ul><li>The printer behind you, jamming</li><li>Two people on the row on calls</li><li>Your call starting in four minutes</li><li>Sam mid-task, headphones off for exactly this</li></ul></div>
+        <div class="scene"><b>In the room at the time</b><ul><li>The printer behind you, jamming</li><li>Two people on the row on calls</li><li>Your call in four minutes</li><li>Sam mid-task, headphones off for this</li></ul></div>
       </div>
       <div class="grow"></div>
       <button class="btn btn-primary" onclick="goTo(3)">What do you do? →</button>
@@ -147,7 +166,6 @@
       <span class="tag tag-red">Three weeks later</span>
       <h2 id="s5h" class="wide">The comment, on top of a brief nobody wrote down.</h2>
       <div class="timeline" id="escalation-timeline"></div>
-      <div class="strip" id="escalation-stats"></div>
       <div class="grow"></div>
       <button class="btn btn-primary" onclick="goTo(6)">Continue →</button>
     </div>
@@ -156,30 +174,37 @@
   <section class="screen" id="screen-6" aria-labelledby="s6h">
     <div class="card">
       <div class="eyebrow" id="reflection-context"></div>
-      <div class="question" id="s6h"></div>
-      <div class="yn" id="yn">
-        <button class="btn btn-yn" onclick="reflect('no')">Probably not</button>
-        <button class="btn btn-yn" onclick="reflect('yes')">Yes, I think so</button>
+      <div class="split">
+        <div>
+          <div class="question" id="s6h"></div>
+          <div class="yn" id="yn">
+            <button class="btn btn-yn" onclick="reflect('no')">Probably not</button>
+            <button class="btn btn-yn" onclick="reflect('yes')">Yes, I think so</button>
+          </div>
+        </div>
+        <div>
+          <div id="reflection-response" aria-live="polite"></div>
+          <div id="reflection-continue" class="hidden"><button class="btn btn-primary" onclick="goTo(7)">See what you’ll learn →</button></div>
+        </div>
       </div>
-      <div id="reflection-response" class="mt-2" aria-live="polite"></div>
       <div class="grow"></div>
-      <div id="reflection-continue" class="hidden"><button class="btn btn-primary" onclick="goTo(7)">See what you’ll learn →</button></div>
     </div>
   </section>
 
   <section class="screen" id="screen-7" aria-labelledby="s7h">
     <div class="card">
       <div class="eyebrow">Before the course</div>
-      <h1 id="s7h">You don’t need to know why to ask what would help.</h1>
-      <p><strong>Sam’s section was still due Tuesday. The brief in writing is how it got there. Same standard, different route.</strong></p>
-      <p class="mt-1">Sam might be neurodivergent. So might one in five of the people in your next meeting. So might you. This course won’t make you an expert. It will make you the colleague people can tell, and the colleague who can ask.</p>
-      <ul class="list">
-        <li>Three words that unlock the topic, and the four neurodifferences you’ll meet most</li>
-        <li>A phrase card and a five-things checklist you’ll actually use</li>
-        <li>What a reasonable adjustment is, how to ask for one, what the law asks, and where to get support</li>
-      </ul>
+      <div class="split">
+        <div>
+          <h1 id="s7h">You don’t need to know why to ask what would help.</h1>
+          <p><strong>Sam’s section was still due Tuesday. The brief in writing is how it got there. Same standard, different route.</strong></p>
+        </div>
+        <div>
+          <p>Sam might be neurodivergent. So might one in five of the people in your next meeting. So might you. This course won’t make you an expert. It will make you the colleague people can tell, and the colleague who can ask.</p>
+          <p class="mt-2"><strong>Continue with the course below.</strong></p>
+        </div>
+      </div>
       <div class="grow"></div>
-      <p class="mt-2"><strong>Continue with the course below.</strong></p>
     </div>
   </section>
 
@@ -199,12 +224,11 @@
   };
   const ESCALATION = {
     timeline: [
-      ['Tuesday', 'Sam leaves without a word. At 17:40 Sam deletes a drafted note asking for briefs in writing.'],
-      ['The following week', 'Sam’s next piece is on time and thin. Sam has stopped asking questions in the channel.'],
-      ['Week three', 'Sam is off sick with stress. In the return-to-work meeting Sam tells HR: “I was diagnosed with ADHD last year. I’ve never told anyone at work. After the meeting I couldn’t.”'],
+      ['Tuesday', 'Sam leaves without a word. At 17:40 Sam deletes a note asking for briefs in writing.'],
+      ['The following week', 'Sam’s next piece is on time and thin. No more questions in the channel.'],
+      ['Week three', 'Off sick with stress. To HR, at the return-to-work meeting: “I was diagnosed with ADHD last year. Nobody at work knew. After the meeting I couldn’t.”'],
       ['Week four', 'The supplier review. The gap Sam would have spotted goes through.']
-    ],
-    stats: [ ['0', 'diagnoses needed before asking what would help'], ['10 min', 'the conversation that fixed it, in option C'] ]
+    ]
   };
   const REFLECTION = {
     context: { a: 'Your choice: said it in the room', b: 'Your choice: moved the work quietly', c: 'Your choice: asked privately', d: 'Your choice: emailed HR' },
@@ -239,8 +263,9 @@
   }
   function choose(k) { userChoice = k; goTo(4); }
   function renderEscalation() {
-    document.getElementById('escalation-timeline').innerHTML = ESCALATION.timeline.map(t => '<div><div class="timeline-time">' + t[0] + '</div><div class="timeline-desc">' + t[1] + '</div></div>').join('');
-    document.getElementById('escalation-stats').innerHTML = ESCALATION.stats.map(s => '<div class="stat"><div class="stat-number">' + s[0] + '</div><div class="stat-label">' + s[1] + '</div></div>').join('');
+    const item = t => '<div><div class="timeline-time">' + t[0] + '</div><div class="timeline-desc">' + t[1] + '</div></div>';
+    const half = Math.ceil(ESCALATION.timeline.length / 2);
+    document.getElementById('escalation-timeline').innerHTML = '<div class="col">' + ESCALATION.timeline.slice(0, half).map(item).join('') + '</div><div class="col">' + ESCALATION.timeline.slice(half).map(item).join('') + '</div>';
   }
   function renderReflection() {
     const k = userChoice || 'a';
