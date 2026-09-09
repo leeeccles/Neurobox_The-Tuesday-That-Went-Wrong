@@ -22,36 +22,49 @@
     --error: #B8332A;   --error-bg: #FDECEA;
     --font: 'Roboto', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
     --r: 16px; --r-sm: 10px;
-    --fs-body: clamp(0.9375rem, 0.72rem + 0.6vw, 1.0625rem);
-    --fs-small: clamp(0.9375rem, 0.8rem + 0.4vw, 1rem);
-    --fs-h1: clamp(1.1875rem, 0.75rem + 1.45vw, 1.625rem);
-    --fs-h2: clamp(1.0625rem, 0.7rem + 1.2vw, 1.375rem);
-    --gap: clamp(0.375rem, 0.15rem + 0.6vw, 0.75rem);
+    --fs-body: clamp(0.9375rem, 0.72rem + 0.6vw, 1.1875rem);
+    --fs-small: clamp(0.9375rem, 0.8rem + 0.4vw, 1.0625rem);
+    --fs-h1: clamp(1.1875rem, 0.75rem + 1.45vw, 2rem);
+    --fs-h2: clamp(1.0625rem, 0.7rem + 1.2vw, 1.5rem);
+    --gap: clamp(0.375rem, 0.15rem + 0.6vw, 1rem);
+    --vgap: clamp(0.5rem, 2.2vh, 1.5rem);
     --lh: 1.55;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { font-size: 100%; }
   body { min-height: 100vh; font-family: var(--font); background: var(--surface); color: var(--ink); -webkit-font-smoothing: antialiased; line-height: 1.5; }
-  #app { max-width: 960px; margin: 0 auto; padding: 0 0 0.375rem; min-height: 100vh; display: flex; flex-direction: column; }
+  #app { max-width: 1120px; margin: 0 auto; padding: 0 0 0.375rem; min-height: 100vh; display: flex; flex-direction: column; }
   .screen { display: none; }
   .screen.active { display: flex; flex-direction: column; flex: 1; animation: fadeIn .3s ease forwards; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) { .screen.active { animation: none; } .btn { transition: none; } }
 
-  .card { background: var(--surface); padding: 0.125rem 0 0.25rem; flex: 1; display: flex; flex-direction: column; }
-  .eyebrow { font-size: 0.9375rem; font-weight: 700; color: var(--primary); margin-bottom: var(--gap); }
+  .card { background: var(--surface); padding: 0.125rem 0 0.25rem; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  .when { color: var(--primary); }
+  .context { font-size: var(--fs-small); color: var(--ink-muted); margin: 0 0 var(--gap); }
   h1 { font-size: var(--fs-h1); font-weight: 700; line-height: 1.25; margin-bottom: var(--gap); max-width: 36ch; }
   h2 { font-size: var(--fs-h2); font-weight: 700; line-height: 1.3; margin-bottom: var(--gap); max-width: 44ch; }
   h2.wide { max-width: 60ch; }
   h1:focus, h2:focus, .question:focus { outline: none; }
-  p { font-size: var(--fs-body); line-height: var(--lh); color: var(--ink-soft); max-width: 62ch; }
-  .mt-1 { margin-top: var(--gap); } .mt-2 { margin-top: calc(var(--gap) * 1.5); } .grow { flex: 1; }
+  p { font-size: var(--fs-body); line-height: var(--lh); color: var(--ink-soft); max-width: 66ch; }
+  .mt-1 { margin-top: var(--gap); } .mt-2 { margin-top: calc(var(--gap) * 1.5); } .grow { flex: 0 0 var(--vgap); }
   strong { font-weight: 700; color: var(--ink); }
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .split { display: grid; grid-template-columns: 1.1fr 1fr; gap: 0.5rem 1.5rem; align-items: start; }
+  .split { display: grid; grid-template-columns: 1.1fr 1fr; gap: 0.5rem clamp(1rem, 3vw, 3rem); align-items: start; }
   @media (max-width: 599px) { .split { grid-template-columns: 1fr; } }
+  /* Wide frames (a column of 860px or more gives a box at least 484px tall): single-column screens take a second column. */
+  .split-wide { display: grid; grid-template-columns: 1fr; gap: var(--gap); }
+  .chosen { display: none; }
+  @media (min-width: 860px) {
+    .split-wide { grid-template-columns: 1.25fr .75fr; gap: 0.5rem clamp(1.5rem, 4vw, 4rem); align-items: center; }
+    .split-wide .status { flex-direction: column; align-items: stretch; margin-top: 0; }
+    .split-wide .chip { justify-content: flex-start; padding: 0.625rem 1rem; }
+    .chosen { display: block; background: var(--surface-alt); border-radius: 12px; padding: 0.875rem 1rem; font-size: var(--fs-small); line-height: var(--lh); color: var(--ink-soft); align-self: center; }
+    .chosen b { display: block; color: var(--ink); margin-bottom: 0.25rem; }
+  }
 
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; font-family: inherit; font-size: 1rem; font-weight: 500; border: none; border-radius: var(--r-sm); cursor: pointer; padding: 0.625rem 1.125rem; min-height: 2.75rem; transition: background .15s; line-height: 1.4; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; font-family: inherit; font-size: var(--fs-small); font-weight: 500; border: none; border-radius: var(--r-sm); cursor: pointer; padding: 0.625rem 1.125rem; min-height: 2.75rem; transition: background .15s, transform .12s; line-height: 1.4; touch-action: manipulation; }
+  .btn:active { transform: scale(.985); }
   .btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
   .btn-primary { background: var(--primary); color: #fff; align-self: flex-start; margin-top: var(--gap); }
   .btn-primary:hover { background: var(--primary-dark); }
@@ -62,18 +75,19 @@
   .btn-choice small { display: block; font-size: var(--fs-small); color: var(--ink-muted); font-weight: 400; margin-top: 0.125rem; line-height: 1.4; }
   .btn-choice .k { display: inline-block; min-width: 1.75rem; height: 1.75rem; border-radius: 6px; background: var(--secondary); color: var(--primary-dark); font-weight: 700; font-size: 0.9375rem; text-align: center; line-height: 1.75rem; margin-right: 0.625rem; flex-shrink: 0; }
 
-  .pressure { display: flex; align-items: center; gap: 0.5rem; background: var(--warning-bg); color: var(--warning); border-radius: 8px; padding: 0.375rem 0.75rem; font-size: 0.9375rem; font-weight: 500; margin-bottom: var(--gap); }
+  .pressure { display: flex; align-items: center; gap: 0.5rem; background: var(--warning-bg); color: var(--warning); border-radius: 8px; padding: 0.375rem 0.75rem; font-size: var(--fs-small); font-weight: 500; margin-bottom: var(--gap); }
+  .pressure .ico { flex-shrink: 0; }
   .pressure .keys { margin-left: auto; font-weight: 400; }
-  .tag { display: inline-block; font-size: 0.9375rem; font-weight: 700; padding: 0.2rem 0.625rem; border-radius: 6px; margin-bottom: var(--gap); }
+  .tag { display: inline-block; font-size: 0.9375rem; font-weight: 700; padding: 0.2rem 0.625rem; border-radius: 6px; margin: 0 0 var(--gap); align-self: flex-start; }
   .tag-red { background: var(--error-bg); color: var(--error); } .tag-amber { background: var(--warning-bg); color: var(--warning); } .tag-green { background: var(--success-bg); color: var(--success); }
 
   .status { display: flex; gap: 0.5rem; margin-top: var(--gap); flex-wrap: wrap; }
-  .chip { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--surface-alt); border: 1px solid var(--line); border-radius: 999px; padding: 0.375rem 0.75rem; font-size: 0.9375rem; font-weight: 500; color: var(--ink); }
+  .chip { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--surface-alt); border: 1px solid var(--line); border-radius: 999px; padding: 0.375rem 0.75rem; font-size: var(--fs-small); font-weight: 500; color: var(--ink); }
   .chip .ok { width: 10px; height: 10px; border-radius: 50%; background: var(--success); } .chip .no { width: 10px; height: 10px; border-radius: 50%; background: var(--error); }
 
   .memory { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: var(--gap); align-items: start; }
   @media (max-width: 519px) { .memory { grid-template-columns: 1fr; } }
-  .quote { background: var(--surface-alt); border-left: 4px solid var(--primary); border-radius: 0 12px 12px 0; padding: 0.625rem 0.875rem; font-size: var(--fs-body); line-height: var(--lh); color: var(--ink); }
+  .quote { background: var(--surface-alt); border-radius: 12px; padding: 0.75rem 1rem; font-size: var(--fs-body); line-height: var(--lh); color: var(--ink); }
   .quote .who { font-size: var(--fs-small); color: var(--ink-muted); margin-top: 0.375rem; font-weight: 500; }
   .scene { background: var(--surface-grey); border-radius: 12px; padding: 0.625rem 0.875rem; font-size: var(--fs-small); line-height: var(--lh); color: var(--ink-soft); }
   .scene b { display: block; color: var(--ink); font-size: var(--fs-small); margin-bottom: 0.25rem; }
@@ -81,7 +95,7 @@
 
   .timeline { margin-top: var(--gap); display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap) 1.25rem; align-items: start; }
   .timeline .col { display: grid; gap: var(--gap); }
-  .timeline .col > div { border-left: 2px solid var(--secondary); padding-left: 0.75rem; }
+  .timeline .col > div { border-left: 1px solid var(--line); padding-left: 0.875rem; }
   @media (max-width: 559px) { .timeline { grid-template-columns: 1fr; } }
   .timeline-time { font-size: var(--fs-small); font-weight: 700; color: var(--primary-dark); }
   .timeline-desc { font-size: var(--fs-small); line-height: 1.4; color: var(--ink-soft); max-width: 62ch; }
@@ -102,6 +116,7 @@
   /* Compact mode: a 16:9 frame under 440px tall (a column narrower than about 780px). */
   @media (max-height: 440px) {
     :root { --lh: 1.45; }
+    :root { --vgap: 0.375rem; }
     .foot .brand, .foot .dots { display: none; }
     .foot { justify-content: flex-end; padding-top: 0.25rem; }
     .btn { min-height: 2.5rem; padding: 0.5rem 1rem; }
@@ -117,11 +132,14 @@
 
   <section class="screen active" id="screen-1" aria-labelledby="s1h">
     <div class="card">
-      <div class="eyebrow">Tuesday, 09:40</div>
-      <h1 id="s1h">The update starts in five minutes.</h1>
-      <p>You run a small project team. Priya has her section in. Dev has his. Sam’s risk section isn’t in the deck.</p>
-      <p class="mt-1">Sam is the person who spotted the supplier problem last quarter that nobody else saw. Sam is at their desk, headphones on, working hard on something else.</p>
-      <div class="status" aria-label="Deck status"><span class="chip"><span class="ok" aria-hidden="true"></span>Priya, delivery plan: in</span><span class="chip"><span class="ok" aria-hidden="true"></span>Dev, budget: in</span><span class="chip"><span class="no" aria-hidden="true"></span>Sam, risk section: missing</span></div>
+      <div class="split-wide">
+        <div>
+          <h1 id="s1h"><span class="when">Tuesday, 09:40.</span> The update starts in five minutes.</h1>
+          <p>You run a small project team. Priya has her section in. Dev has his. Sam’s risk section isn’t in the deck.</p>
+          <p class="mt-1">Sam is the person who spotted the supplier problem last quarter that nobody else saw. Sam is at their desk, headphones on, working hard on something else.</p>
+        </div>
+        <div class="status" aria-label="Deck status"><span class="chip"><span class="ok" aria-hidden="true"></span>Priya, delivery plan: in</span><span class="chip"><span class="ok" aria-hidden="true"></span>Dev, budget: in</span><span class="chip"><span class="no" aria-hidden="true"></span>Sam, risk section: missing</span></div>
+      </div>
       <div class="grow"></div>
       <button class="btn btn-primary" onclick="goTo(2)">What happened last week →</button>
     </div>
@@ -129,8 +147,7 @@
 
   <section class="screen" id="screen-2" aria-labelledby="s2h">
     <div class="card">
-      <div class="eyebrow">Last Thursday, 16:10</div>
-      <h2 id="s2h">The brief.</h2>
+      <h2 id="s2h"><span class="when">Last Thursday, 16:10.</span> The brief.</h2>
       <div class="memory">
         <div>
           <div class="quote">“Sam, can you do the risk section for Tuesday? Usual format, keep it tight.”<div class="who">You, on the way past Sam’s desk, on the way to a call.</div></div>
@@ -145,8 +162,8 @@
 
   <section class="screen" id="screen-3" aria-labelledby="s3h">
     <div class="card">
-      <div class="pressure" role="status">⏱ Four minutes. Your sponsor is already in the room. <span class="keys">Press A–D.</span></div>
       <h2 id="s3h">Sam’s section isn’t there. Your call.</h2>
+      <div class="pressure" role="status"><svg class="ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Four minutes. Your sponsor is already in the room.</span><span class="keys">Press A–D.</span></div>
       <p>Everyone had the same week. Priya stayed late for hers.</p>
       <div class="choices" role="group" aria-label="Your options">
         <button class="btn btn-choice" onclick="choose('a')"><span class="k" aria-hidden="true">A</span><span><span class="sr-only">Option A. </span>Say it in the meeting: “Sam, we all had the same brief.”<small>Make an example of it, in front of everyone</small></span></button>
@@ -163,8 +180,8 @@
 
   <section class="screen" id="screen-5" aria-labelledby="s5h">
     <div class="card">
-      <span class="tag tag-red">Three weeks later</span>
-      <h2 id="s5h" class="wide">The comment, on top of a brief nobody wrote down.</h2>
+      <h2 id="s5h">Three weeks later.</h2>
+      <p>The comment, on top of a brief nobody wrote down.</p>
       <div class="timeline" id="escalation-timeline"></div>
       <div class="grow"></div>
       <button class="btn btn-primary" onclick="goTo(6)">Continue →</button>
@@ -173,10 +190,10 @@
 
   <section class="screen" id="screen-6" aria-labelledby="s6h">
     <div class="card">
-      <div class="eyebrow" id="reflection-context"></div>
       <div class="split">
         <div>
           <div class="question" id="s6h"></div>
+          <div class="context" id="reflection-context"></div>
           <div class="yn" id="yn">
             <button class="btn btn-yn" onclick="reflect('no')">Probably not</button>
             <button class="btn btn-yn" onclick="reflect('yes')">Yes, I think so</button>
@@ -193,7 +210,6 @@
 
   <section class="screen" id="screen-7" aria-labelledby="s7h">
     <div class="card">
-      <div class="eyebrow">Before the course</div>
       <div class="split">
         <div>
           <h1 id="s7h">You don’t need to know why to ask what would help.</h1>
@@ -242,6 +258,7 @@
            c: '<p><strong>Then the rest of the course is about making the question the team’s habit, not just yours.</strong></p>',
            d: '<p><strong>Then HR becomes the second call, not the first.</strong></p><p class="mt-1">The course is the first call.</p>' }
   };
+  const CHOICES = { a: 'Say it in the meeting: “Sam, we all had the same brief.”', b: 'Say nothing now. Quietly move the risk section to Priya.', c: 'After the meeting, privately: “That brief came at you fast in a noisy room. What would make it easier next time?”', d: 'Email HR: “Performance concern, Sam, missed deadline.”' };
   const TOTAL = 7;
   let userChoice = null;
 
@@ -249,7 +266,7 @@
     document.querySelectorAll('[data-dots]').forEach(d => { d.innerHTML = Array.from({length: TOTAL}, (_, i) => '<div class="dot' + (i + 1 === n ? ' active' : '') + '"></div>').join(''); });
     document.getElementById('stepLabel').textContent = 'Screen ' + n + ' of ' + TOTAL;
   }
-  function renderOutcome(k) { const o = OUTCOMES[k]; document.getElementById('outcome-card').innerHTML = o.tag + '<h2 id="s4h" tabindex="-1">' + o.title + '</h2>' + o.body + '<div class="grow"></div><button class="btn btn-primary" onclick="goTo(' + o.next + ')">' + o.cta + '</button>'; }
+  function renderOutcome(k) { const o = OUTCOMES[k]; document.getElementById('outcome-card').innerHTML = '<h2 id="s4h" tabindex="-1">' + o.title + '</h2>' + o.tag + '<div class="split-wide"><div>' + o.body + '</div><div class="chosen"><b>Your call, option ' + k.toUpperCase() + '</b>' + CHOICES[k] + '</div></div><div class="grow"></div><button class="btn btn-primary" onclick="goTo(' + o.next + ')">' + o.cta + '</button>'; }
   function goTo(n) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-' + n).classList.add('active');
