@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Tuesday That Went Wrong</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  /* Neurobox tokens (confirmed 2026-09-08). Fluid layout: no stage scaling, so browser zoom works (WCAG 1.4.4). */
+  :root {
+    --primary: #5D36FF; --primary-dark: #4B31E0;
+    --secondary: #E3DDF9; --accent: #C875B8;
+    --ink: #111118; --ink-soft: #33333A; --ink-muted: #5F5F6B;
+    --surface: #FFFFFF; --surface-alt: #F7F5FF; --surface-grey: #F2F2F2; --line: #E6E6EE;
+    --success: #12783D; --success-bg: #E8F5EE;
+    --warning: #B84A18; --warning-bg: #FDF1EA;
+    --error: #B8332A;   --error-bg: #FDECEA;
+    --font: 'Roboto', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --r: 16px; --r-sm: 10px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 100%; }
+  body { min-height: 100vh; font-family: var(--font); background: var(--surface-alt); color: var(--ink); -webkit-font-smoothing: antialiased; line-height: 1.5; }
+  #app { max-width: 960px; margin: 0 auto; padding: 1rem 1rem 3.5rem; min-height: 100vh; display: flex; flex-direction: column; }
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadeIn .3s ease forwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .screen.active { animation: none; } .btn { transition: none; } }
+
+  .card { background: var(--surface); border-radius: var(--r); padding: 1.75rem; border: 1px solid var(--line); min-height: 26rem; display: flex; flex-direction: column; }
+  .eyebrow { font-size: 0.9375rem; font-weight: 700; color: var(--primary); margin-bottom: 0.5rem; }
+  h1 { font-size: 1.875rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.75rem; max-width: 34ch; }
+  h2 { font-size: 1.5rem; font-weight: 700; line-height: 1.3; margin-bottom: 0.5rem; max-width: 40ch; }
+  h1:focus, h2:focus, .question:focus { outline: none; }
+  p { font-size: 1.0625rem; line-height: 1.6; color: var(--ink-soft); max-width: 62ch; }
+  .mt-1 { margin-top: 0.5rem; } .mt-2 { margin-top: 1rem; } .grow { flex: 1; }
+  strong { font-weight: 700; color: var(--ink); }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; font-family: inherit; font-size: 1rem; font-weight: 500; border: none; border-radius: var(--r-sm); cursor: pointer; padding: 0.75rem 1.25rem; min-height: 2.875rem; transition: background .15s; line-height: 1.4; }
+  .btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+  .btn-primary { background: var(--primary); color: #fff; align-self: flex-start; margin-top: 1.25rem; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1rem; }
+  @media (max-width: 640px) { .choices { grid-template-columns: 1fr; } }
+  .btn-choice { background: var(--surface-alt); color: var(--ink); text-align: left; justify-content: flex-start; padding: 0.875rem 1rem; border: 1px solid var(--primary); font-size: 1rem; }
+  .btn-choice:hover { background: #fff; box-shadow: inset 0 0 0 1px var(--primary); }
+  .btn-choice small { display: block; font-size: 0.9375rem; color: var(--ink-muted); font-weight: 400; margin-top: 0.25rem; line-height: 1.5; }
+  .btn-choice .k { display: inline-block; min-width: 1.75rem; height: 1.75rem; border-radius: 6px; background: var(--secondary); color: var(--primary-dark); font-weight: 700; font-size: 0.9375rem; text-align: center; line-height: 1.75rem; margin-right: 0.75rem; flex-shrink: 0; }
+
+  .pressure { display: flex; align-items: center; gap: 0.5rem; background: var(--warning-bg); color: var(--warning); border-radius: 8px; padding: 0.5rem 0.75rem; font-size: 0.9375rem; font-weight: 500; margin-bottom: 0.75rem; }
+  .tag { display: inline-block; font-size: 0.9375rem; font-weight: 700; padding: 0.25rem 0.625rem; border-radius: 6px; margin-bottom: 0.625rem; }
+  .tag-red { background: var(--error-bg); color: var(--error); } .tag-amber { background: var(--warning-bg); color: var(--warning); } .tag-green { background: var(--success-bg); color: var(--success); }
+
+  .status { display: flex; gap: 0.625rem; margin-top: 0.875rem; flex-wrap: wrap; }
+  .chip { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--surface-alt); border: 1px solid var(--line); border-radius: 999px; padding: 0.5rem 0.875rem; font-size: 0.9375rem; font-weight: 500; color: var(--ink); }
+  .chip .ok { width: 10px; height: 10px; border-radius: 50%; background: var(--success); } .chip .no { width: 10px; height: 10px; border-radius: 50%; background: var(--error); }
+
+  .memory { display: grid; grid-template-columns: 1.15fr .85fr; gap: 1rem; margin-top: 0.5rem; }
+  @media (max-width: 640px) { .memory { grid-template-columns: 1fr; } }
+  .quote { background: var(--surface-alt); border-left: 4px solid var(--primary); border-radius: 0 12px 12px 0; padding: 0.875rem 1rem; font-size: 1.0625rem; line-height: 1.55; color: var(--ink); }
+  .quote .who { font-size: 0.9375rem; color: var(--ink-muted); margin-top: 0.5rem; font-weight: 500; }
+  .scene { background: var(--surface-grey); border-radius: 12px; padding: 0.875rem 1rem; font-size: 0.9375rem; line-height: 1.6; color: var(--ink-soft); }
+  .scene b { display: block; color: var(--ink); font-size: 0.9375rem; margin-bottom: 0.375rem; }
+  .scene ul { padding-left: 1rem; } .scene li { margin-bottom: 0.25rem; }
+
+  .timeline { border-left: 2px solid var(--secondary); margin: 0.625rem 0 0 0.375rem; padding-left: 1rem; display: grid; gap: 0.625rem; }
+  .timeline-time { font-size: 0.9375rem; font-weight: 700; color: var(--primary-dark); }
+  .timeline-desc { font-size: 1rem; line-height: 1.55; color: var(--ink-soft); max-width: 62ch; }
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.625rem; margin-top: 0.875rem; }
+  @media (max-width: 640px) { .stat-grid { grid-template-columns: 1fr 1fr; } }
+  .stat { background: var(--surface-alt); border-radius: 12px; padding: 0.75rem; }
+  .stat-number { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+  .stat-label { font-size: 0.9375rem; line-height: 1.5; color: var(--ink-soft); margin-top: 0.125rem; }
+  .src { font-size: 0.9375rem; color: var(--ink-muted); margin-top: 0.625rem; }
+  .question { font-size: 1.5rem; font-weight: 700; line-height: 1.35; margin: 0.375rem 0 1rem; max-width: 40ch; }
+  .yn { display: flex; gap: 0.625rem; flex-wrap: wrap; }
+  .btn-yn { background: var(--surface-alt); color: var(--ink); border: 1px solid var(--primary); }
+  .btn-yn:hover { background: #fff; }
+  .hidden { display: none !important; }
+  .list { margin-top: 0.625rem; display: grid; gap: 0.375rem; padding-left: 1.25rem; font-size: 1rem; line-height: 1.55; color: var(--ink-soft); max-width: 62ch; }
+
+  .foot { display: flex; align-items: center; justify-content: space-between; padding-top: 0.75rem; gap: 1rem; }
+  .dots { display: flex; gap: 6px; align-items: center; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--secondary); }
+  .dot.active { background: var(--primary); width: 22px; border-radius: 4px; }
+  .step { font-size: 0.9375rem; color: var(--ink-muted); }
+  .brand { width: 84px; height: 16px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <section class="screen active" id="screen-1" aria-labelledby="s1h">
+    <div class="card">
+      <div class="eyebrow">Tuesday, 09:40</div>
+      <h1 id="s1h">The update starts in five minutes.</h1>
+      <p>You run a small project team. Priya has her section in. Dev has his. Sam’s risk section isn’t in the deck.</p>
+      <p class="mt-1">Sam is the person who spotted the supplier problem last quarter that nobody else saw. Sam is at their desk, headphones on, working hard on something else.</p>
+      <div class="status" aria-label="Deck status"><span class="chip"><span class="ok" aria-hidden="true"></span>Priya, delivery plan: in</span><span class="chip"><span class="ok" aria-hidden="true"></span>Dev, budget: in</span><span class="chip"><span class="no" aria-hidden="true"></span>Sam, risk section: missing</span></div>
+      <div class="grow"></div>
+      <button class="btn btn-primary" onclick="goTo(2)">What happened last week →</button>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-2" aria-labelledby="s2h">
+    <div class="card">
+      <div class="eyebrow">Last Thursday, 16:10</div>
+      <h2 id="s2h">The brief.</h2>
+      <div class="memory">
+        <div>
+          <div class="quote">“Sam, can you do the risk section for Tuesday? Usual format, keep it tight.”<div class="who">You, on the way past Sam’s desk, on the way to a call.</div></div>
+          <p class="mt-2">Sam nodded. You kept walking. Nothing was written down.</p>
+        </div>
+        <div class="scene"><b>In the room at the time</b><ul><li>The printer behind you, jamming</li><li>Two people on the row on calls</li><li>Your call starting in four minutes</li><li>Sam mid-task, headphones off for exactly this</li></ul></div>
+      </div>
+      <div class="grow"></div>
+      <button class="btn btn-primary" onclick="goTo(3)">What do you do? →</button>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-3" aria-labelledby="s3h">
+    <div class="card">
+      <div class="pressure" role="status">⏱ Four minutes. Your sponsor is already in the room.</div>
+      <h2 id="s3h">Sam’s section isn’t there. Your call.</h2>
+      <p>Everyone had the same week. Priya stayed late for hers. Press A, B, C or D, or choose below.</p>
+      <div class="choices" role="group" aria-label="Your options">
+        <button class="btn btn-choice" onclick="choose('a')"><span class="k" aria-hidden="true">A</span><span><span class="sr-only">Option A. </span>Say it in the meeting: “Sam, we all had the same brief.”<small>Make an example of it, in front of everyone</small></span></button>
+        <button class="btn btn-choice" onclick="choose('b')"><span class="k" aria-hidden="true">B</span><span><span class="sr-only">Option B. </span>Say nothing now. Quietly move the risk section to Priya.<small>Keep the meeting on track</small></span></button>
+        <button class="btn btn-choice" onclick="choose('c')"><span class="k" aria-hidden="true">C</span><span><span class="sr-only">Option C. </span>After the meeting, privately: “That brief came at you fast in a noisy room. What would make it easier next time?”<small>Same deadline, different route. Ten minutes, later</small></span></button>
+        <button class="btn btn-choice" onclick="choose('d')"><span class="k" aria-hidden="true">D</span><span><span class="sr-only">Option D. </span>Email HR: “Performance concern, Sam, missed deadline.”<small>Do it properly</small></span></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-4" aria-labelledby="s4h">
+    <div class="card" id="outcome-card"></div>
+  </section>
+
+  <section class="screen" id="screen-5" aria-labelledby="s5h">
+    <div class="card">
+      <span class="tag tag-red">Three weeks later</span>
+      <h2 id="s5h">Here’s where it went.</h2>
+      <p>Not the comment on its own. The comment on top of a brief nobody wrote down.</p>
+      <div class="timeline" id="escalation-timeline"></div>
+      <div class="stat-grid" id="escalation-stats"></div>
+      <div class="src">Prevalence: Neurobox, General ND Awareness. Team-of-twenty figure derived from it.</div>
+      <div class="grow"></div>
+      <button class="btn btn-primary" onclick="goTo(6)">Continue →</button>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-6" aria-labelledby="s6h">
+    <div class="card">
+      <div class="eyebrow" id="reflection-context"></div>
+      <div class="question" id="s6h"></div>
+      <div class="yn" id="yn">
+        <button class="btn btn-yn" onclick="reflect('no')">Probably not</button>
+        <button class="btn btn-yn" onclick="reflect('yes')">Yes, I think so</button>
+      </div>
+      <div id="reflection-response" class="mt-2" aria-live="polite"></div>
+      <div class="grow"></div>
+      <div id="reflection-continue" class="hidden"><button class="btn btn-primary" onclick="goTo(7)">See what you’ll learn →</button></div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-7" aria-labelledby="s7h">
+    <div class="card">
+      <div class="eyebrow">Before the course</div>
+      <h1 id="s7h">You don’t need to know why to ask what would help.</h1>
+      <p><strong>Sam’s section was still due Tuesday. The brief in writing is how it got there. Same standard, different route.</strong></p>
+      <p class="mt-1">Sam might be neurodivergent. So might one in five of the people in your next meeting. So might you. This course won’t make you an expert. It will make you the colleague people can tell, and the colleague who can ask.</p>
+      <ul class="list">
+        <li>Three words that unlock the topic, and the four neurodifferences you’ll meet most</li>
+        <li>A phrase card and a five-things checklist you’ll actually use</li>
+        <li>What a reasonable adjustment is, how to ask for one, what the law asks, and where to get support</li>
+      </ul>
+      <div class="grow"></div>
+      <p class="mt-2"><strong>Continue with the course below.</strong></p>
+    </div>
+  </section>
+
+  <div class="foot">
+    <img class="brand" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMjgyIiBoZWlnaHQ9IjUzIiB2aWV3Qm94PSIwIDAgMjgyIDUzIj4KICA8ZGVmcz4KICAgIDxjbGlwUGF0aCBpZD0iYSI+CiAgICAgIDxwYXRoIGQ9Ik0wLDBIMzQuNjMzVjM1LjgxOUgwWiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCkiIGZpbGw9Im5vbmUiPjwvcGF0aD4KICAgIDwvY2xpcFBhdGg+CiAgICA8Y2xpcFBhdGggaWQ9ImIiPgogICAgICA8cGF0aCBkPSJNMCwwSDM0LjYzNFYzNS44MTlIMFoiIGZpbGw9Im5vbmUiPjwvcGF0aD4KICAgIDwvY2xpcFBhdGg+CiAgPC9kZWZzPgogIDxwYXRoIGQ9Ik03Ljg1LDMuNTI4VjUuMjE2QzkuOTI4LDIuMDcxLDEzLjU0NiwwLDE4LjU0OCwwYzQuMjMzLDAsNy43LDEuMyw5LjkyOCw0LjYsMS40NjIsMi4xNDgsMi4xNTUsNS4xMzksMi4xNTUsOC45NzRWMzEuODMxYzAsMi4yMjQtMS4zODYsMy4zNzUtNC4xNTYsMy4zNzVzLTQuMTU2LTEuMTUxLTQuMTU2LTMuMzc1VjE0Ljk1N2E5LjA2NSw5LjA2NSwwLDAsMC0xLjIzMS01LjIxNmMtMS4xNTUtMS42ODctMy0yLjQ1NC01LjQ2NS0yLjQ1NGE4LjksOC45LDAsMCwwLTcuMzEyLDMuNTI4VjMxLjgzMWMwLDIuMjI0LTEuMzg1LDMuMzc1LTQuMTU2LDMuMzc1UzAsMzQuMDU1LDAsMzEuODMxVjMuNTI4QzAsMS4zLDEuMzA4LjE1Myw0LC4xNTNjMi44NDgsMCwzLjkyNSwxLjM4MSwzLjg0OCwzLjM3NSIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCAxNy40MTEpIiBmaWxsPSIjNWQzNmZmIj48L3BhdGg+CiAgPHBhdGggZD0iTTE2LjkzMywzNS42NjZhMTkuOTIzLDE5LjkyMywwLDAsMS03LjEyNi0xLjIxNCwxNC4zOTMsMTQuMzkzLDAsMCwxLTUuMzIzLTMuNDk0QzEuNTUsMjcuODksMCwyMy40MTgsMCwxOC4wMjRjMC01LjM1MywxLjUtOS44ODIsNC4zMjktMTMuMUExNC45NDgsMTQuOTQ4LDAsMCwxLDE1LjkzMiwwYTE2LjUyNywxNi41MjcsMCwwLDEsNi4xNzYsMS4xMzMsMTMuNiwxMy42LDAsMCwxLDQuNzMzLDMuMTUzLDEzLjk1LDEzLjk1LDAsMCwxLDMuMDMxLDQuODA3LDE3LjEwNywxNy4xMDcsMCwwLDEsMS4wNjgsNi4wOTRjMCwyLjI3My0uNDM0LDMuNy0xLjM2Niw0LjVhNS4zLDUuMywwLDAsMS0zLjU1OS44NzNIOC4yMzVjLjgxMyw1LjM0MywzLjg2OSw4LjA1Myw5LjA4Miw4LjA1M0ExMi44NywxMi44NywwLDAsMCwyMy43ODMsMjdhNS45NDcsNS45NDcsMCwwLDEsMi44NDgtMS4wNzQsMy41NjUsMy41NjUsMCwwLDEsMy40NjIsMy42ODJjMCwxLjIyOS0uNzgsMi4zMDgtMi4zODUsMy4zQTE5LjkzNiwxOS45MzYsMCwwLDEsMTYuOTMzLDM1LjY2NlpNMTUuNzc4LDYuNmE2LjgzNiw2LjgzNiwwLDAsMC01LjE2NiwyLjA1MkExMC4zMTMsMTAuMzEzLDAsMCwwLDguMTU5LDE0LjVoMTQuN2E4LjY2LDguNjYsMCwwLDAtMS43OC01LjY3NkE2LjY3Miw2LjY3MiwwLDAsMCwxNS43NzgsNi42WiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzYuNjM1IDE3LjE4MSkiIGZpbGw9IiM1ZDM2ZmYiPjwvcGF0aD4KICA8cGF0aCBkPSJNMjIuMjQzLDMxLjY3N1YyOS45OWMtMiwzLjMtNS43NzMsNS4xMzktMTAuNTQ0LDUuMTM5LTQuMjMzLDAtNy41NDMtMS40NTctOS41NDQtNC42Qy42OTMsMjguNDU2LDAsMjUuMzg4LDAsMjEuNjNWMy4zNzVDMCwxLjE1MSwxLjM4NSwwLDQuMTU2LDBTOC4zMTIsMS4xNTEsOC4zMTIsMy4zNzVWMjAuMzI2YzAsMS45OTQuMjMyLDMuOTg4LDEuMjMxLDUuMjkzYTYuMDc3LDYuMDc3LDAsMCwwLDUuMjM0LDIuMyw4LjA4Nyw4LjA4NywwLDAsMCw3LjA4LTMuNjA1VjMuMzc1QzIxLjg1NywxLjE1MSwyMy4yNDMsMCwyNi4wMTQsMFMzMC4xNywxLjE1MSwzMC4xNywzLjM3NXYyOC4zYzAsMi4yMjQtMS4zMDgsMy4zNzUtNCwzLjM3NS0yLjg0NywwLTMuOTI1LTEuMzgxLTMuOTI1LTMuMzc1IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSg3My44MSAxNy41NjQpIiBmaWxsPSIjNWQzNmZmIj48L3BhdGg+CiAgPHBhdGggZD0iTTguMzEyLDMxLjgzMWMwLDIuMjI0LTEuMzg1LDMuMzc1LTQuMTU2LDMuMzc1UzAsMzQuMDU1LDAsMzEuODMxVjMuNTI4QzAsMS4zLDEuMzA4LjE1Myw0LC4xNTMsNi44NS4xNTMsNy45MjcsMS41MzQsNy44NSwzLjUyOFY2LjIxM0ExMC40LDEwLjQsMCwwLDEsMTcuNTQ3LDBjMi41NCwwLDMuNTQxLDEuMTUxLDMuNTQxLDMuNzU4cy0xLjA3OCwzLjc1OC00LDMuODM1Yy00LjU0MS4xNTMtNy4wOCwxLjQ1Ny04Ljc3NCw0LjY3OFoiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDExMi42MDEgMTcuNDExKSIgZmlsbD0iIzVkMzZmZiI+PC9wYXRoPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEzNC41MzYgMTcuMTgxKSI+CiAgICA8cGF0aCBkPSJNMCwwSDM0LjYzM1YzNS44MTlIMFoiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDApIiBmaWxsPSJub25lIj48L3BhdGg+CiAgICA8ZyBjbGlwLXBhdGg9InVybCgjYSkiPgogICAgICA8cGF0aCBkPSJNMTcuMjQsMzUuODE5Yy01LjE4NiwwLTkuNTQ0LTEuNjg0LTEyLjYtNC44NzFDMS42LDI3Ljc4OSwwLDIzLjMxOSwwLDE4LjAyNCwwLDcuMDc1LDYuODI3LDAsMTcuMzkzLDAsMjIuNTc5LDAsMjYuOTM3LDEuNjg0LDMwLDQuODcxYzMuMDMzLDMuMTYsNC42MzcsNy42MjksNC42MzcsMTIuOTI0QzM0LjYzMywyOC43NDQsMjcuODA2LDM1LjgxOSwxNy4yNCwzNS44MTlabTAtMjkuMTQ2QTcuNzU1LDcuNzU1LDAsMCwwLDEwLjksOS43YTEzLjA0NCwxMy4wNDQsMCwwLDAtMi4zNTcsOC4wOTIsMTMuMTkxLDEzLjE5MSwwLDAsMCwyLjQwNSw4LjI1NCw3LjkxOSw3LjkxOSwwLDAsMCw2LjQ0NiwzLjAyLDcuNzgxLDcuNzgxLDAsMCwwLDYuMzQtMi45OTEsMTIuOSwxMi45LDAsMCwwLDIuMzU3LTguMDU0LDEzLjMzOSwxMy4zMzksMCwwLDAtMi40MDUtOC4yOTNBNy44OTMsNy44OTMsMCwwLDAsMTcuMjQsNi42NzNaIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwKSIgZmlsbD0iIzVkMzZmZiI+PC9wYXRoPgogICAgPC9nPgogIDwvZz4KICA8cGF0aCBkPSJNMTQuMTYyLDUyLjg0N0EyMy4zNDcsMjMuMzQ3LDAsMCwxLDMsNTAuMjM5QzAsNDguNDc1LDAsNDYuMzUxLDAsNDQuMVYzLjM3NUMwLDEuMTM2LDEuNCwwLDQuMTU1LDBTOC4zMTIsMS4xMzYsOC4zMTIsMy4zNzVWMTkuNzg5YTEyLjg4NiwxMi44ODYsMCwwLDEsOC4wODEtMi4zNzgsMTUuMzg2LDE1LjM4NiwwLDAsMSwxMS41MTYsNC41NDRDMzAuOCwyNSwzMi4zMjQsMjkuNCwzMi4zMjQsMzQuNjY5YzAsNS40NzEtMS42NTMsMTAuMDQ2LTQuNzgxLDEzLjIzMUMyNC4zNjQsNTEuMTM2LDE5LjczNyw1Mi44NDcsMTQuMTYyLDUyLjg0N1ptLjMwNy0yOC42ODdhOS40NzQsOS40NzQsMCwwLDAtNi4xNTcsMi4wNzFWNDQuNDg2YTExLjE3NywxMS4xNzcsMCwwLDAsNS44NSwxLjYxMSw5LjA4OSw5LjA4OSwwLDAsMCw3LjAzMi0yLjg4NiwxMS44MjQsMTEuODI0LDAsMCwwLDIuNTg4LTguMDA2LDEyLjMwOSwxMi4zMDksMCwwLDAtMi41MjEtOC4wNTRBOC41Nyw4LjU3LDAsMCwwLDE0LjQ2OCwyNC4xNjFaIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNzUuNTU4KSIgZmlsbD0iIzVkMzZmZiI+PC9wYXRoPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIxMi4xOTMgMTcuMTgxKSI+CiAgICA8cGF0aCBkPSJNMCwwSDM0LjYzNFYzNS44MTlIMFoiIGZpbGw9Im5vbmUiPjwvcGF0aD4KICAgIDxnIGNsaXAtcGF0aD0idXJsKCNiKSI+CiAgICAgIDxwYXRoIGQ9Ik0xNy4yNCwzNS44MTljLTUuMTg1LDAtOS41NDMtMS42ODQtMTIuNi00Ljg3MUMxLjYsMjcuNzg4LDAsMjMuMzE5LDAsMTguMDI0LDAsNy4wNzUsNi44MjcsMCwxNy4zOTMsMCwyMi41NzksMCwyNi45MzgsMS42ODQsMzAsNC44NzFjMy4wMzQsMy4xNiw0LjYzNyw3LjYyOSw0LjYzNywxMi45MjRDMzQuNjM0LDI4Ljc0NCwyNy44MDYsMzUuODE5LDE3LjI0LDM1LjgxOVptMC0yOS4xNDZBNy43NTQsNy43NTQsMCwwLDAsMTAuOSw5LjdhMTMuMDQ1LDEzLjA0NSwwLDAsMC0yLjM1Nyw4LjA5MiwxMy4xOTIsMTMuMTkyLDAsMCwwLDIuNCw4LjI1NCw3LjkxOCw3LjkxOCwwLDAsMCw2LjQ0NSwzLjAyLDcuNzgyLDcuNzgyLDAsMCwwLDYuMzQtMi45OTEsMTIuOSwxMi45LDAsMCwwLDIuMzU3LTguMDU0LDEzLjMzOCwxMy4zMzgsMCwwLDAtMi40MDUtOC4yOTNBNy44OTQsNy44OTQsMCwwLDAsMTcuMjQsNi42NzNaIiBmaWxsPSIjNWQzNmZmIj48L3BhdGg+CiAgICA8L2c+CiAgPC9nPgogIDxwYXRoIGQ9Ik0yMy4yNDMsMi45MTVBNS45MDksNS45MDksMCwwLDEsMjguOTM4LDBjMi43NzEsMCwzLjY5NC44NDQsMy42OTQsMi4wNzFhNi4wMjksNi4wMjksMCwwLDEtMS42MTYsMy4zTDIxLjc4MSwxNy4yNTgsMzEuNCwyOS42ODNBNS42NzUsNS42NzUsMCwwLDEsMzIuOTQsMzIuOWMwLDEuMy0uODQ3LDIuMTQ4LTMuNzcxLDIuMTQ4LTMuMDc5LDAtNC40NjQtLjc2Ny02LTIuOTE1TDE2LjMxNiwyMi43LDkuMzg5LDMyLjEzOGE1LjkwOCw1LjkwOCwwLDAsMS01LjcsMi45MTVDLjkyNCwzNS4wNTIsMCwzNC4yMDksMCwzMi45YTUuODMsNS44MywwLDAsMSwxLjYxNi0zLjIyMmw5LjQ2Ni0xMi4yNzJMMS43Nyw1LjM2OWE2LjAyOCw2LjAyOCwwLDAsMS0xLjYxNi0zLjNDLjE1NC44NDQsMS4wNzcsMCw0LDBjMywwLDQuMzg2Ljc2Nyw2LDIuOTE1bDYuNjE5LDkuMDVaIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyNDkuMDYgMTcuNTY0KSIgZmlsbD0iIzVkMzZmZiI+PC9wYXRoPgo8L3N2Zz4K" alt="" aria-hidden="true">
+    <div class="dots" data-dots aria-hidden="true"></div>
+    <div class="step" id="stepLabel" aria-live="polite">Screen 1 of 7</div>
+  </div>
+</div>
+
+<script>
+  const OUTCOMES = {
+    a: { wrong: true,  tag: '<span class="tag tag-red">Said in the room</span>', title: 'Sam went quiet.', body: '<p>Sam said “sorry” and nothing else. The sponsor moved on.</p><p class="mt-1">You noticed Sam didn’t speak again for the rest of the meeting. You assumed the message had landed.</p>', next: 5, cta: 'See what happened next →' },
+    b: { wrong: false, tag: '<span class="tag tag-amber">Risk not resolved</span>', title: 'Priya did it. Nothing changed.', body: '<p>Priya did the risk section, and the next one. Sam noticed. Nobody said anything.</p><p class="mt-1">You’ve stopped asking the person who spotted the supplier problem. Next Tuesday looks the same as this one.</p>', next: 6, cta: 'Continue →' },
+    c: { wrong: false, tag: '<span class="tag tag-green">Ten minutes, well spent</span>', title: 'Sam told you in one sentence.', body: '<p>“If it’s written down I can do it. If it’s said in passing I lose half of it, especially with the printer going.”</p><p class="mt-1">You agreed two things: briefs in writing, and no 09:00 stand-ups on Mondays, for anyone. It took ten minutes. You still don’t know why, and you didn’t need to.</p><p class="mt-1"><strong>Same section, same deadline. The brief arrives differently.</strong></p>', next: 6, cta: 'Continue →' },
+    d: { wrong: false, tag: '<span class="tag tag-amber">Premature</span>', title: 'HR replied the next day.', body: '<p>“Thanks. Before we open anything formal: what have you tried? Has Sam been asked what would help?”</p><p class="mt-1">You hadn’t. HR had asked you the question you hadn’t asked Sam.</p>', next: 6, cta: 'Continue →' }
+  };
+  const ESCALATION = {
+    timeline: [
+      ['Tuesday, 10:20', 'Sam leaves the meeting without speaking. Headphones on for the rest of the day.'],
+      ['Tuesday, 17:40', 'Sam had a note drafted asking for briefs in writing. Sam deletes it.'],
+      ['The following week', 'Sam’s next piece is on time and thin. Sam has stopped asking questions in the channel.'],
+      ['Week three', 'Sam is off sick with stress. In the return-to-work meeting Sam tells HR: “I was diagnosed with ADHD last year. I’ve never told anyone at work. After the meeting I couldn’t.”'],
+      ['Week four', 'The supplier review. The gap Sam would have spotted goes through.']
+    ],
+    stats: [ ['15–20%', 'of people in the UK are neurodivergent'], ['3 or 4', 'people in a team of twenty, whether or not anyone has said so'], ['0', 'diagnoses you needed before asking what would help'], ['10 min', 'the conversation that fixed it in option C'] ]
+  };
+  const REFLECTION = {
+    context: { a: 'Your choice: said it in the room', b: 'Your choice: moved the work quietly', c: 'Your choice: asked privately', d: 'Your choice: emailed HR' },
+    question: { a: 'Be honest: on a real Tuesday, would you have found ten minutes after the meeting, or would it have slid to next week?', b: 'Be honest: next Tuesday, would you ask Sam, or Priya again?', c: 'Would you have found the ten minutes on a day when you were the one behind?', d: 'Be honest: would you have asked Sam before HR asked you?' },
+    no:  { a: '<p><strong>You’re in good company, and that’s the problem.</strong></p><p class="mt-1">The comment took three seconds. The cost took three weeks. The course is the ten-minute question, ready before you need it.</p>',
+           b: '<p><strong>Honest answer.</strong></p><p class="mt-1">Moving the work is the quiet version of the same Tuesday. Nobody is hurt and nothing changes. The course gives you the ten-minute question so it’s easier than the workaround.</p>',
+           c: '<p><strong>Honest answer.</strong></p><p class="mt-1">The busiest day is exactly when the question gets dropped. The course gives you the sentence so you don’t have to find it.</p>',
+           d: '<p><strong>Honest answer.</strong></p><p class="mt-1">The formal route feels safe. It isn’t faster, and it starts without the one conversation that would have fixed it. The course gives you that conversation.</p>' },
+    yes: { a: '<p><strong>Then this course is about doing it under pressure.</strong></p><p class="mt-1">Everyone asks on a quiet day. The skill is asking on the same day.</p>',
+           b: '<p><strong>Then next Tuesday is about the question, not the workaround.</strong></p><p class="mt-1">The course gives you the words.</p>',
+           c: '<p><strong>Then the rest of the course is about making the question the team’s habit, not just yours.</strong></p>',
+           d: '<p><strong>Then HR becomes the second call, not the first.</strong></p><p class="mt-1">The course is the first call.</p>' }
+  };
+  const TOTAL = 7;
+  let userChoice = null;
+
+  function renderDots(n) {
+    document.querySelectorAll('[data-dots]').forEach(d => { d.innerHTML = Array.from({length: TOTAL}, (_, i) => '<div class="dot' + (i + 1 === n ? ' active' : '') + '"></div>').join(''); });
+    document.getElementById('stepLabel').textContent = 'Screen ' + n + ' of ' + TOTAL;
+  }
+  function renderOutcome(k) { const o = OUTCOMES[k]; document.getElementById('outcome-card').innerHTML = o.tag + '<h2 id="s4h" tabindex="-1">' + o.title + '</h2>' + o.body + '<div class="grow"></div><button class="btn btn-primary" onclick="goTo(' + o.next + ')">' + o.cta + '</button>'; }
+  function goTo(n) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + n).classList.add('active');
+    renderDots(n);
+    if (n === 4 && userChoice) renderOutcome(userChoice);
+    if (n === 5) renderEscalation();
+    if (n === 6) renderReflection();
+    if (n === 7 && window.parent !== window) { try { window.parent.postMessage({ type: 'EXPERIENCE_COMPLETE', choice: userChoice }, '*'); } catch (e) {} }
+    window.scrollTo({ top: 0 });
+    const h = document.querySelector('#screen-' + n + ' h1, #screen-' + n + ' h2, #screen-' + n + ' .question'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
+  }
+  function choose(k) { userChoice = k; goTo(4); }
+  function renderEscalation() {
+    document.getElementById('escalation-timeline').innerHTML = ESCALATION.timeline.map(t => '<div><div class="timeline-time">' + t[0] + '</div><div class="timeline-desc">' + t[1] + '</div></div>').join('');
+    document.getElementById('escalation-stats').innerHTML = ESCALATION.stats.map(s => '<div class="stat"><div class="stat-number">' + s[0] + '</div><div class="stat-label">' + s[1] + '</div></div>').join('');
+  }
+  function renderReflection() {
+    const k = userChoice || 'a';
+    document.getElementById('reflection-context').textContent = REFLECTION.context[k];
+    document.getElementById('s6h').textContent = REFLECTION.question[k];
+    document.getElementById('yn').classList.remove('hidden');
+    document.getElementById('reflection-response').innerHTML = '';
+    document.getElementById('reflection-continue').classList.add('hidden');
+  }
+  function reflect(ans) {
+    const k = userChoice || 'a';
+    document.getElementById('yn').classList.add('hidden');
+    const r = document.getElementById('reflection-response');
+    r.innerHTML = REFLECTION[ans][k];
+    document.getElementById('reflection-continue').classList.remove('hidden');
+  }
+  document.addEventListener('keydown', e => {
+    if (!document.getElementById('screen-3').classList.contains('active')) return;
+    const k = e.key.toLowerCase(); if (['a','b','c','d'].includes(k) && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); choose(k); }
+  });
+  (function () {
+    const q = new URLSearchParams(location.search); const n = parseInt(q.get('screen') || '1', 10); const c = q.get('choice');
+    renderDots(1);
+    if (c && OUTCOMES[c]) userChoice = c;
+    if (n > 1 && n <= TOTAL) goTo(n);
+  })();
+</script>
+</body>
+</html>
